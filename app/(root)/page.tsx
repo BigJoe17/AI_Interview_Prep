@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { dummyInterviews } from "@/constants";
-import InterviewCard from "../components/InterviewCard";
+import InterviewCard from "../../components/InterviewCard";
 const page = () => {
   return (
     <>
@@ -41,7 +41,7 @@ const page = () => {
 
         <div className="interviews-sections flex flex-row gap-6 max-sm:flex-col ">
           {dummyInterviews.map((interview) => (
-            <InterviewCard key={interview.Id}
+            <InterviewCard key={interview.id}
               {...interview}
               />
           ))}

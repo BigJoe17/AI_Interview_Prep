@@ -9,7 +9,7 @@ interface TechIconProps {
   techstack: string[];
 }
 
-const DisplayTechIcons = async ({ techstack }: { TechIconProps }) => {
+const DisplayTechIcons = async ( {techstack} :  {TechIconProps} ) => {
   const techIcons = await getTechLogos(techstack);
 
   return (

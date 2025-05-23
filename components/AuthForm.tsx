@@ -11,16 +11,24 @@ import FormField from "./FormField";
 import { Form } from "@/components/ui/form";
 import { useRouter } from "next/navigation"; // Changed from Router to useRouter
 import { Toaster } from "sonner";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { auth } from "@/firebase/client"; // Adjust the import path as necessary
+import { Signup } from "@/lib/actions/auth.action"; // Adjust the import path as necessary
 
 type FormType = "sign-in" | "sign-up";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
-    name: type === "sign-up"
-      ? z.string().min(3, "Name must be at least 3 characters").max(50)
-      : z.string().optional(),
+    name:
+      type === "sign-up"
+        ? z.string().min(3, "Name must be at least 3 characters").max(50)
+        : z.string().optional(),
     email: z.string().email("Please enter a valid email"),
-    password: z.string()
+    password: z
+      .string()
       .min(5, "Password must be at least 5 characters")
       .max(50, "Password must be at most 50 characters"),
   });
@@ -39,21 +47,59 @@ const AuthForm = ({ type }: { type: FormType }) => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       if (type === "sign-up") {
-         toast.success("Sign Up successful", {
+        const { name, email, password } = values;
+
+        const userCredentials = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+        const result = await Signup({
+          uid: userCredentials.user.uid,
+          name,
+          email,
+          password,
+        });
+
+        if (!result?.success) {
+          toast.error(result.message, {
+            position: "top-center",
+            duration: 3000,
+          });
+        }
+
+        toast.success("Sign Up successful", {
           position: "top-center",
           duration: 3000,
-        }) 
-        router.push('/sign-in')// Properly redirect after sign-up
+        });
+        router.push("/sign-in"); // Properly redirect after sign-up
       } else {
-        
+        const { email, password } = values;
+        const userCredentials = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+        const idToken = await userCredentials.user.getIdToken();
+        if (!idToken) {
+          toast.error("Error signing in", {
+            position: "top-center",
+            duration: 3000,
+          });
+
+          return;
+        }
+
         toast.success("Sign In successful", {
           position: "top-center",
           duration: 3000,
         });
-        router.push("/"); 
+        router.push("/");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -74,7 +120,10 @@ const AuthForm = ({ type }: { type: FormType }) => {
         <h3 className="text-center">Practice Job Interview with AI</h3>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="w-full mt-4 space-y-6 text-primary-100">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="w-full mt-4 space-y-6 text-primary-100"
+          >
             {!isSignIn && (
               <FormField
                 control={form.control}
