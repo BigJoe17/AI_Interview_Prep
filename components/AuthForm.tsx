@@ -16,16 +16,18 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "@/firebase/client"; // Adjust the import path as necessary
-import { Signup } from "@/lib/actions/auth.action"; // Adjust the import path as necessary
+import { SignUp, SignIn } from "@/lib/actions/auth.action"; // Adjust the import path as necessary
 
 type FormType = "sign-in" | "sign-up";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
-    name:
-      type === "sign-up"
-        ? z.string().min(3, "Name must be at least 3 characters").max(50)
-        : z.string().optional(),
+    name: z
+      .string()
+      .min(3, "Name must be at least 3 characters")
+      .max(50)
+      .optional(),
+
     email: z.string().email("Please enter a valid email"),
     password: z
       .string()
@@ -58,15 +60,15 @@ const AuthForm = ({ type }: { type: FormType }) => {
           password
         );
 
-        const result = await Signup({
+        const result = await SignUp({
           uid: userCredentials.user.uid,
-          name,
+          name: name ?? "",
           email,
           password,
         });
 
         if (!result?.success) {
-          toast.error(result.message, {
+          toast.error(result?.message || "Unknown error", {
             position: "top-center",
             duration: 3000,
           });
@@ -86,6 +88,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
         );
 
         const idToken = await userCredentials.user.getIdToken();
+
         if (!idToken) {
           toast.error("Error signing in", {
             position: "top-center",
@@ -94,6 +97,10 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
           return;
         }
+        await SignIn({
+          email,
+          idToken,
+        });
 
         toast.success("Sign In successful", {
           position: "top-center",

@@ -1,9 +1,13 @@
+'use server'
+
 import { cookies } from "next/headers";
 import { db, auth } from "@/firebase/admin";
+import { UserRecord } from "firebase-admin/auth";
+
 
 const ONE_WEEK = 60 * 60 * 24 * 7;
 
-export async function Signup(params: SignUpParams) {
+export async function SignUp(params: SignUpParams) {
   const { uid, name, email } = params;
 
   try {
@@ -21,6 +25,11 @@ export async function Signup(params: SignUpParams) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+
+    return{
+      success: true,
+      message: "User created successfully Please sign in",
+    }
     // await db.collection('user_interviews').doc(uid).set({
     // //     interviews: [],
     // //     createdAt: new Date().toISOString(),
@@ -75,4 +84,33 @@ export async function setSessionCookie(idToken: string) {
     path: "/",
     sameSite: "lax",
   });
+}
+
+
+export async function getCurrentUser(): Promise<User | null> {
+  const cookieStore  = await cookies();
+
+  const sessionCookie = cookieStore.get("session")?.value;
+
+  if(!sessionCookie){
+    return null;
+  }
+
+  try{
+    const decocdedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    const userRecord = await db.collection("users").doc(decocdedClaims.uid).get();
+    if (!userRecord.exists) {
+      return null;
+    }
+    return { ...userRecord.data(), id: userRecord.id } as User;
+    
+  }catch(error: any) {
+    console.error("Error getting current user", error);
+    return null;  
+  }
+}
+export async function isAuthenticated(){
+  const user = await getCurrentUser();
+
+  return !!user 
 }
