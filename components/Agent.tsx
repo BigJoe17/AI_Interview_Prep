@@ -72,7 +72,7 @@ const Agent = ({ userName }: AgentProps) => {
       )}
 
       <div className="w-full flex justify-center">
-        {callStatus !== "ACTIVE" ? (
+        {callStatus !== CallStatus.ACTIVE ? (
           <button className="relative btn-call">
             <span
               className={cn(
