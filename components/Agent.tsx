@@ -16,6 +16,7 @@ type AgentProps = {
 
 const Agent = ({ userName }: AgentProps) => {
   const isSpeaking = true;
+
   const callStatus = CallStatus.CONNECTING; // This would typically come from props or state
   const message = [
     "what is your name?",
@@ -81,7 +82,7 @@ const Agent = ({ userName }: AgentProps) => {
               )}
             />
             <span className="flex items-center gap-2">
-              {callStatus === "INACTIVE" || callStatus === "FINISHED"
+              {callStatus === 'INACTIVE' || callStatus === "FINISHED"
                 ? "Call"
                 : "..."}
             </span>
